@@ -1,0 +1,21 @@
+V5:
+-Thermocouple on Accelero MAX31855 detected
+-Dump file through USB on the end of the record session to maximise speed of saving files
+
+V4 : 
+- Ajout du support bluetooth quand VESC pas connect 
+
+V1.2 (MAJ du 20/10/2016) par Alexis :
+- Demande de confirmation lors du formattage de la carte
+- Ajout d'une fonction interrupt pour d clancher des actions avec le d clancheur externe
+
+V1.1 (MAJ du 10/09/2016) par Alexis :
+- Lissage de l'affichage de la valeur de batterie afin d' viter les saut de valeurs.
+- Lissage des valeurs affich s par l'ADC sur 10 points
+
+V 1.0 :
+Le logger poss de les fonctions suivantes :
+- Possibilit  de r gler la fr quence d'aquisition de 31 Hz   1000Hz
+- Possibilit  de regler la taille des roues et le nombre d'aimants pour l'aquistion de la vitesse
+- Lecture de valeurs analogiques en passant par une communication SPI avec un ADC externe (2 voies)
+- Lecture de 2 voies digitales (Etat d'aimants) et lecture de la vitesse gr ce   la 3 me voie.
