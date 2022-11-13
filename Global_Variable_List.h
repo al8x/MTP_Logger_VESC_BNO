@@ -22,12 +22,13 @@ int IMU_ScreenSelector=0;
 
 int Vesc_ScreenSelector=0;
 #define Vesc_NbMode     4
-
 int Vesc_GraphSelector=0;
 #define Vesc_NbGraph    4
 
 int AnalogMode = 0;
 #define nbAnalogMode    2
+int FFT_GraphSelector = 0;
+#define FFT_GraphNb     5
 
 //-----------------------------------------------
 //-------------------------- APPLICATION DEFINITION 
@@ -49,10 +50,11 @@ int logging_application;
 
 bool usbWasConnected;
 
+unsigned long int millisS_logStart;
 unsigned long int microS_logStart;
 
 struct data_t {
-  unsigned long time;
+  float time_s;
   unsigned int mcp_0; // On ne lit que 2 valeurs d'adc
   unsigned int mcp_1; // On ne lit que 2 valeurs d'adc
   unsigned int mcp_2; // On ne lit que 2 valeurs d'adc
@@ -70,9 +72,31 @@ struct data_t {
   int overrun_in;
 };
 
-  
 //---------------------------------------
-// ** 2 - WHEEL EFFICENCY + SPEED CHECK
+// ** 2 - SD card fast reader
+//---------------------------------------
+
+struct imu_t {
+  float time_s;
+  unsigned int mcp_0; // On ne lit que 2 valeurs d'adc
+  unsigned int mcp_1; // On ne lit que 2 valeurs d'adc
+  unsigned int mcp_2; // On ne lit que 2 valeurs d'adc
+  unsigned int mcp_3; // On ne lit que 2 valeurs d'adc
+  
+  float Speed; // The speed is calculated thanks to the hall effect sensor
+  unsigned short hallSensorOne;
+  unsigned short hallSensorTwo;
+  float temperature;
+
+  unsigned int adc_1; // On ne lit que 2 valeurs d'adc
+  unsigned int adc_2; // On ne lit que 2 valeurs d'adc
+  unsigned int adc_3; // On ne lit que 2 valeurs d'adc
+  
+  int overrun_in;
+};
+
+//---------------------------------------
+// ** 3 - WHEEL EFFICENCY + SPEED CHECK
 //---------------------------------------
 
 long int currentMagnetTime;

@@ -10,22 +10,16 @@ void IMULogData(){
   }
   
   else{ 
-    
+
+     startTimeLogImu=millis();           // We save the start time to start at 0
      Aquisition("IMU Logging",fileName); // Diplsay the screen of aquisition data
      IMUWriteHeader();
      DEBUGSERIAL.println(" A");
      
      while (!rightButtonPressed){
       
-        bno.getEvent(&linearAccelData, Adafruit_BNO055::VECTOR_LINEARACCEL);
-        bno.getEvent(&accelerationData, Adafruit_BNO055::VECTOR_ACCELEROMETER);
-        bno.getEvent(&gravityData, Adafruit_BNO055::VECTOR_GRAVITY);
-        bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-        bno.getEvent(&angVelocityData, Adafruit_BNO055::VECTOR_GYROSCOPE);
-        bno.getEvent(&magnetoData, Adafruit_BNO055::VECTOR_MAGNETOMETER);
-        
-        IMUsdWriteData(&orientationData,&linearAccelData,&angVelocityData,&accelerationData,&gravityData,&magnetoData);
-
+        refreshImuDatas();  
+        IMUsdWriteData();
         
         if (!file.sync() || file.getWriteError()) {
           error("write error");
@@ -44,9 +38,11 @@ void IMULogData(){
 
 
 void IMUWriteHeader() {
-  //Linear accel
-    file.print("linaAccel t");
-    file.print(";");   
+  
+    file.print("T (ms)");
+    file.print(";");
+
+    //Linear accel
     file.print("linaAccel x");
     file.print(";");
     file.print("linaAccel y");
@@ -55,8 +51,6 @@ void IMUWriteHeader() {
     file.print(";");
 
     //Accel Data
-    file.print("Accel t");
-    file.print(";"); 
     file.print("accel x");
     file.print(";");
     file.print("accel y");
@@ -65,8 +59,6 @@ void IMUWriteHeader() {
     file.print(";");
 
     //Gravity
-    file.print("gravit t");
-    file.print(";"); 
     file.print("gravit x");
     file.print(";");
     file.print("gravit y");
@@ -74,9 +66,7 @@ void IMUWriteHeader() {
     file.print("gravit z");
     file.print(";");
     
-    //Orientation
-    file.print("orient t");
-    file.print(";"); 
+    //Orientation 
     file.print("orient x");
     file.print(";");
     file.print("orient y");
@@ -85,8 +75,6 @@ void IMUWriteHeader() {
     file.print(";");
 
     //Angle velocity
-    file.print("angleVelo t");
-    file.print(";"); 
     file.print("angleVelo x");
     file.print(";");
     file.print("angleVelo y");
@@ -94,9 +82,7 @@ void IMUWriteHeader() {
     file.print("angleVelo z");
     file.print(";");
 
-    //Magneto data
-    file.print("magnet t");
-    file.print(";"); 
+    //Magneto data 
     file.print("magnet x");
     file.print(";");
     file.print("magnet y");
@@ -104,69 +90,85 @@ void IMUWriteHeader() {
     file.print("magnet z");
     file.print(";");
 
+    // Put the temperature
+    file.print("temperature(C)");
+    file.print(";");
+
+    // Put the pressure
+    file.print("Pressure(hPa)");
+    file.print(";");
+
+    // Put the altitude
+    file.print("Altitude(m)");
+    file.print(";");
+
     file.println();
 }
 
-void IMUsdWriteData(sensors_event_t* orient,sensors_event_t* linaAccel, sensors_event_t* angleVelo, sensors_event_t* accel, sensors_event_t* gravit,sensors_event_t* magnet){
+void IMUsdWriteData(){
+    
+    // Put the time
+    file.print((IMU_data.timestamp)-startTimeLogImu);
+    file.print(";");
     
     //Linear accel
-    file.print(linaAccel->timestamp);
+    file.print(IMU_data.linearAcceleration.x);
     file.print(";");
-    file.print(linaAccel->acceleration.x);
+    file.print(IMU_data.linearAcceleration.y);
     file.print(";");
-    file.print(linaAccel->acceleration.y);
-    file.print(";");
-    file.print(linaAccel->acceleration.z);
+    file.print(IMU_data.linearAcceleration.z);
     file.print(";");
 
     //Accel Data
-    file.print(accel->timestamp);
+    file.print(IMU_data.acceleration.x);
     file.print(";");
-    file.print(accel->acceleration.x);
+    file.print(IMU_data.acceleration.y);
     file.print(";");
-    file.print(accel->acceleration.y);
-    file.print(";");
-    file.print(accel->acceleration.z);
+    file.print(IMU_data.acceleration.z);
     file.print(";");
 
     //Gravity
-    file.print(gravit->timestamp);
+    file.print(IMU_data.gravity.x);
     file.print(";");
-    file.print(gravit->acceleration.x);
+    file.print(IMU_data.gravity.y);
     file.print(";");
-    file.print(gravit->acceleration.y);
-    file.print(";");
-    file.print(gravit->acceleration.z);
+    file.print(IMU_data.gravity.z);
     file.print(";");
     
     //Orientation
-    file.print(orient->timestamp);
+    file.print(IMU_data.orientation.x);
     file.print(";");
-    file.print(orient->orientation.x);
+    file.print(IMU_data.orientation.y);
     file.print(";");
-    file.print(orient->orientation.y);
-    file.print(";");
-    file.print(orient->orientation.z);
+    file.print(IMU_data.orientation.z);
     file.print(";");
 
     //Angle velocity
-    file.print(angleVelo->timestamp);
+    file.print(IMU_data.gyro.x);
     file.print(";");
-    file.print(angleVelo->gyro.x);
+    file.print(IMU_data.gyro.y);
     file.print(";");
-    file.print(angleVelo->gyro.y);
-    file.print(";");
-    file.print(angleVelo->gyro.z);
+    file.print(IMU_data.gyro.z);
     file.print(";");
 
     //Magneto data
-    file.print(magnet->timestamp);
+    file.print(IMU_data.magnetic.x);
     file.print(";");
-    file.print(magnet->magnetic.x);
+    file.print(IMU_data.magnetic.y);
     file.print(";");
-    file.print(magnet->magnetic.y);
+    file.print(IMU_data.magnetic.z);
     file.print(";");
-    file.print(magnet->magnetic.z);
+
+    // Put the temperature
+    file.print(IMU_data.temperature);
+    file.print(";");
+
+    // Put the pressure
+    file.print(IMU_data.pressure);
+    file.print(";");
+
+    // Put the altitude
+    file.print(IMU_data.altitude);
     file.print(";");
 
     file.println();

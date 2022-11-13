@@ -12,6 +12,8 @@
 #include <MAX31855.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BNO055_t3.h>
+#include <Adafruit_BMP280_i2ct3.h>
+#include <MPU9250_i2ct3.h>
 
 #include <TimeLib.h>
 #include <DS1307RTC_i2ct3.h>  // a basic DS1307 library that returns time as a time_t
@@ -67,16 +69,22 @@
 #define RESOLUTION_ADC      10      // --------------Teensy Analog input
 #define DEBOUNCE_DURATION   100     // Debounce en ms
 
+// THERMOCOUPLE
 MAX31855 thermocouple;
 
+// IMU TYPE 1
 #define BNO055_SAMPLERATE_DELAY_MS (100)
 Adafruit_BNO055 bno = Adafruit_BNO055(WIRE_BUS, -1, 0x28, I2C_MASTER, I2C_PINS_18_19, I2C_PULLUP_INT, I2C_RATE_600, I2C_OP_MODE_ISR);  
 
+// IMU TYPE 2 : MPU9255 + 280
+Adafruit_BMP280 bme; // I2C 
+MPU9250 mpu = MPU9250();  
+
 //-----------------------------------------------
 // -- SD CARD OPERATIONS
-#define LOG_INTERVAL_VAL    12 //Value between whicj we can select the speed of record
-uint32_t LOG_INTERVAL_USEC_TABLE[LOG_INTERVAL_VAL]={666,1000,2000,4000,8000,10000,20000,50000,100000,200000,500000,1000000};
-int log_interval_selector = 2;      
+#define LOG_INTERVAL_VAL    13 //Value between whicj we can select the speed of record
+uint32_t LOG_INTERVAL_USEC_TABLE[LOG_INTERVAL_VAL]={500,666,1000,2000,4000,8000,10000,20000,50000,100000,200000,500000,1000000};
+int log_interval_selector = 4;      
 uint32_t LOG_INTERVAL_USEC = LOG_INTERVAL_USEC_TABLE[log_interval_selector];
 
 
@@ -89,7 +97,7 @@ const uint32_t PREALLOCATE_SIZE_MiB = 1024UL;
 #define SD_CONFIG SdSpiConfig(SD_CS_PIN, DEDICATED_SPI, SPI_CLOCK)  // could be as well SHARED_SPI
 
 const uint64_t PREALLOCATE_SIZE  =  (uint64_t)PREALLOCATE_SIZE_MiB << 20;
-// Max length of file name including zero byte.
+// Max length of file name including zero byte. 
 #define FILE_NAME_DIM 40
 // Max number of records to buffer while SD is busy.
 const size_t FIFO_DIM = 512*FIFO_SIZE_SECTORS/sizeof(data_t);
@@ -105,7 +113,8 @@ file_t csvFile;
 file_t dir;
 
 // You may modify the filename.  Digits before the dot are file versions.
-char binName[] = "FastLog00.bin";
+char binName[14] = "FastLog00.bin";
+
 String global_CsvName; // this variable halp to acces the name of the last file globaly
 
 // -- SLOW SD SAVING PARAMETERS DEFINITION
@@ -149,10 +158,14 @@ int logging = false;            //Affect the interrupt, to prevent error when re
 // ----------- Temperature sensor MAX31855
 bool thermocoupleDetected = false;
 
-// ------------IMU BNO055
-bool imuDetected;
-unsigned long lastImuDataDate;  // Will store the date of last IMU data aquisition (for potential numerical treatement);
-sensors_event_t orientationData , angVelocityData , linearAccelData, accelerationData, gravityData, magnetoData ;
+// ------------IMU Sensors
+int imuDetected = 0;
+
+#define IMU_TYPE_BNO055     1
+#define IMU_TYPE_MPU925X    2
+
+unsigned long startTimeLogImu;  // Will store the date of last IMU data aquisition (for potential numerical treatement);
+sensors_event_t IMU_data ;        // all the data for the BNO055 are stored in those variables or for the MPU925x_BMP280
 
 //-------------VESC
 bool vescConnection ;               //True if connection with Vesc is detected
@@ -296,14 +309,27 @@ void setup()
   
   //--------------------------------------------------------
   // -------------- IMU Initialisation
-  if (!bno.begin())
+  if (bno.begin())
   {
-    DEBUGSERIAL.println("No BNO055 detected");
-    imuDetected = false;
+    DEBUGSERIAL.println("BNO055 detected");
+    imuDetected = IMU_TYPE_BNO055;
+  }
+  else if (mpu.begin()){
+    DEBUGSERIAL.println("MPU 9255 detected");
+    imuDetected = IMU_TYPE_MPU925X;
+    
+    mpu.set_accel_range(RANGE_4G);        // Can be 2,4,8 or 16
+    mpu.set_gyro_range(RANGE_GYRO_250);   // Can be 250,500,1000 or 2000
+    mpu.set_mag_scale(SCALE_14_BITS);     // Can be 14 or 16
+    mpu.set_mag_speed(MAG_8_Hz);          // can be 8 or 100
+    
+    if (bme.begin()){
+      DEBUGSERIAL.println("B280 detected");
+    }
   }
   else{
-    DEBUGSERIAL.println("BNO055 detected");
-    imuDetected = true;
+    DEBUGSERIAL.println("No BNO055 detected");
+    imuDetected = false;
   }
 
   ScreenCheckStatusTwo(100);
@@ -469,7 +495,13 @@ void loop(void) {
           }
           else if (carteSdIn){
             logging_application = ANALOG_ACCELERO;
-            fastLog_programme();
+            if (AnalogMode==0){
+              fastLog_programme();
+            }
+            else{
+              FFT_GraphSelector+=1;
+              FFT_GraphSelector=(FFT_GraphSelector%FFT_GraphNb);
+            }
           }
         break;                     
      }
@@ -601,7 +633,7 @@ float mapfloat(float x, float in_min, float in_max, float out_min, float out_max
  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
-int OxeloggerBatteryLevel(){
+int loggerBatteryLevel(){
   //read the value on the external ADC and convert in percentage left according to the curve 
   #define sizeOfBuiltInBatCapArray 11
   float percentage;
@@ -648,6 +680,7 @@ int OxeloggerBatteryLevel(){
   }   
 
   percentage = int(percentage/5)*5;  // Round the number to 5% precision
+  percentage=constrain(percentage,0,100);
   
   return (percentage);
 }

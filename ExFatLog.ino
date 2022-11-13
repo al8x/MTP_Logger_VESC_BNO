@@ -24,38 +24,48 @@ void logRecord(data_t* data, uint16_t overrun) {
     overrun++;
     data->overrun_in = 0X8000 | overrun;
   } else {
-    
-    switch (logging_application){
-              
-      case EXTERNAL_MCP_SPEED:
-        data->time = micros()-microS_logStart;
-        data->mcp_0 = readADC(0);
-        data->mcp_1 = readADC(1);
-        data->mcp_2 = readADC(2);
-        data->Speed = currentSpeed;
-        data->hallSensorOne = digitalRead(HALL_SENSOR_ONE_PIN);
-        data->hallSensorTwo = digitalRead(HALL_SENSOR_TWO_PIN);
-        break;
 
-      case ANALOG_ACCELERO:
-        data->time = micros()-microS_logStart;
-        data->adc_1 = analogRead(ACCELERO_X_PIN);
-        data->adc_2 = analogRead(ACCELERO_Y_PIN);
-        data->adc_3 = analogRead(ACCELERO_Z_PIN);
-        data->Speed = currentSpeed;
-        data->hallSensorOne = digitalRead(HALL_SENSOR_ONE_PIN);
-        data->hallSensorTwo = digitalRead(HALL_SENSOR_TWO_PIN);
-        break;
-        
-      case THERMOCOUPLE:
-        data->time = micros()-microS_logStart;
-        int status = thermocouple.read();                
-        data->temperature = thermocouple.getTemperature();
-        data->Speed = currentSpeed;
-        data->hallSensorOne = digitalRead(HALL_SENSOR_ONE_PIN);
-        data->hallSensorTwo = digitalRead(HALL_SENSOR_TWO_PIN);
-        break;
-    }
+      // Fisrt we save the time for every cases, and uses MicroSecs if frequency above 1000 Hz
+      
+      if (LOG_INTERVAL_USEC_TABLE[LOG_INTERVAL_VAL]<1000){
+        data->time_s = float((float(micros())-float(microS_logStart))/1000000);
+      }
+      else{
+        data->time_s = float((float(millis())-float(millisS_logStart))/1000);
+      }
+    
+    
+      switch (logging_application){   
+                
+        case EXTERNAL_MCP_SPEED:
+          
+          data->mcp_0 = readADC(0);
+          data->mcp_1 = readADC(1);
+          data->mcp_2 = readADC(2);
+          data->Speed = currentSpeed;
+          data->hallSensorOne = digitalRead(HALL_SENSOR_ONE_PIN);
+          data->hallSensorTwo = digitalRead(HALL_SENSOR_TWO_PIN);
+          break;
+  
+        case ANALOG_ACCELERO:
+          
+          data->adc_1 = analogRead(ACCELERO_X_PIN);
+          data->adc_2 = analogRead(ACCELERO_Y_PIN);
+          data->adc_3 = analogRead(ACCELERO_Z_PIN);
+          data->Speed = currentSpeed;
+          data->hallSensorOne = digitalRead(HALL_SENSOR_ONE_PIN);
+          data->hallSensorTwo = digitalRead(HALL_SENSOR_TWO_PIN);
+          break;
+          
+        case THERMOCOUPLE:
+          
+          int status = thermocouple.read();                
+          data->temperature = thermocouple.getTemperature();
+          data->Speed = currentSpeed;
+          data->hallSensorOne = digitalRead(HALL_SENSOR_ONE_PIN);
+          data->hallSensorTwo = digitalRead(HALL_SENSOR_TWO_PIN);
+          break;
+      }
   }
 }
 
@@ -68,7 +78,7 @@ void printRecord(Print* pr, data_t* data) {
           pr->print(F("File created on : "));
           pr->println(String(hour(),DEC)+ "h"+String(minute(),DEC)+ " - "+String(day(),DEC) + "/"+String(month(),DEC) + "/"+String(year(),DEC));
           pr->println("Wheel Diameter : "+ String(ListeDeDiametrePossible[RangDiametre]) + "mm ; Number of magnet : "+ String(nbAimentSurRoue)+ " ; Frequency : "+String(1000000/LOG_INTERVAL_USEC)+ " Hz");
-          pr->print(F("time(uSec);Input 1;Input 2;Voltage bat;Speed(km/h);Digital 1;Digital 2"));
+          pr->print(F("time(Sec);Input 1;Input 2;Voltage bat;Speed(km/h);Digital 1;Digital 2"));
           pr->println();    
           break;
   
@@ -76,7 +86,7 @@ void printRecord(Print* pr, data_t* data) {
           pr->print(F("File created on : "));
           pr->println(String(hour(),DEC)+ "h"+String(minute(),DEC)+ " - "+String(day(),DEC) + "/"+String(month(),DEC) + "/"+String(year(),DEC));
           pr->println("Wheel Diameter : "+ String(ListeDeDiametrePossible[RangDiametre]) + "mm ; Number of magnet : "+ String(nbAimentSurRoue)+ " ; Frequency : "+String(1000000/LOG_INTERVAL_USEC)+ " Hz");
-          pr->print(F("time(uSec);X;Y;Z;Speed(km/h);Digital 1;Digital 2"));
+          pr->print(F("time(Sec);X;Y;Z;Speed(km/h);Digital 1;Digital 2"));
           pr->println();    
           break;
           
@@ -84,7 +94,7 @@ void printRecord(Print* pr, data_t* data) {
           pr->print(F("File created on : "));
           pr->println(String(hour(),DEC)+ "h"+String(minute(),DEC)+ " - "+String(day(),DEC) + "/"+String(month(),DEC) + "/"+String(year(),DEC));
           pr->println("Wheel Diameter : "+ String(ListeDeDiametrePossible[RangDiametre]) + "mm ; Number of magnet : "+ String(nbAimentSurRoue)+ " ; Frequency : "+String(1000000/LOG_INTERVAL_USEC)+ " Hz");
-          pr->print(F("time(uSec);Temperature;Speed(km/h);Digital 1;Digital 2"));
+          pr->print(F("time(Sec);Temperature;Speed(km/h);Digital 1;Digital 2"));
           pr->println();    
           break;
       }
@@ -96,14 +106,14 @@ void printRecord(Print* pr, data_t* data) {
   if (data->overrun_in & 0X8000) {
     uint16_t n = data->overrun_in & 0X7FFF;
     nr += n;
-    pr->print(F("-1,"));
-    pr->print(n);
-    pr->println(F(",overuns"));
+//    pr->print(F("-1,"));
+//    pr->print(n);
+//    pr->println(F(",overuns"));
   } 
   else {
       switch (logging_application){       
         case EXTERNAL_MCP_SPEED:
-          pr->print(data->time);
+          pr->print(data->time_s,4);
           pr->write(';');
           pr->print(data->mcp_0);
           pr->write(';');
@@ -120,7 +130,7 @@ void printRecord(Print* pr, data_t* data) {
           break;
   
         case ANALOG_ACCELERO:
-          pr->print(data->time);
+          pr->print(data->time_s,4);
           pr->write(';');
           pr->print(data->adc_1);
           pr->write(';');
@@ -137,7 +147,7 @@ void printRecord(Print* pr, data_t* data) {
           break;
           
         case THERMOCOUPLE:
-          pr->print(data->time);
+          pr->print(data->time_s,4);
           pr->write(';');
           pr->print(data->temperature);
           pr->write(';');
@@ -214,6 +224,22 @@ void clearSerialInput() {
 //-------------------------------------------------------------------------------
 void createBinFile() {
   binFile.close();
+
+  switch (logging_application){   
+                
+        case EXTERNAL_MCP_SPEED:
+          memcpy(binName,"FastLog00.bin",sizeof(binName));
+          break;
+  
+        case ANALOG_ACCELERO:
+          memcpy(binName,"FastACC00.bin",sizeof(binName));
+          break;
+          
+        case THERMOCOUPLE:
+          memcpy(binName,"FastTem00.bin",sizeof(binName));
+          break;   
+  }
+  
   while (sd.exists(binName)) {
     char* p = strchr(binName, '.');
     if (!p) {
@@ -295,6 +321,7 @@ void fastLogData() {
 
   // Time to log next record.
   uint32_t logTime = micros();
+  millisS_logStart=m;
   microS_logStart=logTime;
   while (true) {
     // Time for next data record.

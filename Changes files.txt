@@ -1,6 +1,10 @@
+
 V5:
--Thermocouple on Accelero MAX31855 detected
--Dump file through USB on the end of the record session to maximise speed of saving files
+
+- Possibility to log up to 2000 kHz
+- New usb files - SD card direct connection
+- Thermocouple on Accelero MAX31855 detected
+- Dump file through USB on the end of the record session to maximise speed of saving files
 
 V4 : 
 - Ajout du support bluetooth quand VESC pas connect 

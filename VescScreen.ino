@@ -1,4 +1,10 @@
 void actionVescMode (int modeSelected){
+
+  //Refresh status of VESC connection
+  if (VescUartGetValue(measuredVal)){
+    vescConnection=true; 
+  }
+  
   switch (modeSelected) {
     case 0:
       //VescScreen();    //VESC Mode, can controle the Ride in certain Mode

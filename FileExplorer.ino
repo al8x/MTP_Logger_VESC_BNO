@@ -109,6 +109,7 @@ void scrollAndDumpFiles(){
           }
           
           if (middleButtonPressed){
+            Screen_dumpingFile();
             USB_dumpFile(csvFileList[fileIndex]);
             middleButtonPressed = false;
           }

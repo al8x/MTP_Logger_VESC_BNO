@@ -7,18 +7,74 @@
   // - VECTOR_LINEARACCEL   - m/s^2
   // - VECTOR_GRAVITY       - m/s^2
 
-    //bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-    //bno.getEvent(&linearAccelData, Adafruit_BNO055::VECTOR_LINEARACCEL);
-    //bno.getEvent(&angVelocityData, Adafruit_BNO055::VECTOR_GYROSCOPE);
-    //bno.getEvent(&accelerationData, Adafruit_BNO055::VECTOR_ACCELEROMETER);
-    //bno.getEvent(&gravityData, Adafruit_BNO055::VECTOR_GRAVITY);
-    //bno.getEvent(&magnetoData, Adafruit_BNO055::VECTOR_MAGNETOMETER);
+    //bno.getEvent(&IMU_data, Adafruit_BNO055::VECTOR_EULER);
+    //bno.getEvent(&IMU_data, Adafruit_BNO055::VECTOR_LINEARACCEL);
+    //bno.getEvent(&IMU_data, Adafruit_BNO055::VECTOR_GYROSCOPE);
+    //bno.getEvent(&IMU_data, Adafruit_BNO055::VECTOR_ACCELEROMETER);
+    //bno.getEvent(&IMU_data, Adafruit_BNO055::VECTOR_GRAVITY);
+    //bno.getEvent(&IMU_data, Adafruit_BNO055::VECTOR_MAGNETOMETER);
     //  int8_t boardTemp = bno.getTemp();
     
 //  Serial.print(F("temperature: "));
 //  Serial.println(boardTemp);
 
+void refreshImuDatas(){
+  
+  if (imuDetected==IMU_TYPE_BNO055){
+      bno.getEvent(&IMU_data, Adafruit_BNO055::VECTOR_LINEARACCEL);    
+      bno.getEvent(&IMU_data, Adafruit_BNO055::VECTOR_ACCELEROMETER); 
+      bno.getEvent(&IMU_data, Adafruit_BNO055::VECTOR_GRAVITY);            
+      bno.getEvent(&IMU_data, Adafruit_BNO055::VECTOR_EULER);          
+      bno.getEvent(&IMU_data, Adafruit_BNO055::VECTOR_GYROSCOPE);      
+      bno.getEvent(&IMU_data, Adafruit_BNO055::VECTOR_MAGNETOMETER);
+      IMU_data.temperature = bno.getTemp();   
+  }
+  
+  else if (imuDetected==IMU_TYPE_MPU925X){
+      
+      mpu.get_accel_g();
+      mpu.get_gyro_d();
+      mpu.get_mag_t();
+
+      memset(&IMU_data, 0, sizeof(sensors_event_t));
+
+      IMU_data.version = sizeof(sensors_event_t);
+      IMU_data.timestamp = millis();
+      
+      mpu.get_accel();
+      IMU_data.acceleration.x = mpu.x;
+      IMU_data.acceleration.y = mpu.y;
+      IMU_data.acceleration.z = mpu.z;
+
+      IMU_data.gravity.x = mpu.x_g;
+      IMU_data.gravity.y = mpu.y_g;
+      IMU_data.gravity.z = mpu.z_g;
+
+      IMU_data.orientation.x = 0;  // because the bn0 has no sensors
+      IMU_data.orientation.y = 0;
+      IMU_data.orientation.z = 0;
+      
+      IMU_data.magnetic.x = mpu.mx_t;
+      IMU_data.magnetic.y = mpu.my_t;
+      IMU_data.magnetic.z = mpu.mz_t;
+
+      IMU_data.gyro.x = mpu.gx_d;
+      IMU_data.gyro.y = mpu.gy_d;
+      IMU_data.gyro.z = mpu.gz_d;
+
+      IMU_data.temperature = bme.readTemperature();
+      IMU_data.pressure = bme.readPressure();
+      IMU_data.altitude = bme.readAltitude(1013.25);
+
+  }
+  else{
+    DEBUGSERIAL.println("Error in the IMU ssignement");
+  }
+}
+
 void IMU_RedirectingScreen(){
+
+  refreshImuDatas();  
   
   switch (IMU_ScreenSelector) {
     case 0:
@@ -46,35 +102,32 @@ void IMU_RedirectingScreen(){
 }
 
 void ScreenOrientData(){
-  
-    bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
- 
+   
     display.setTextSize(1);
     display.setTextColor(WHITE);
     display.println("       - IMU -  ");
-    display.println("  Orientation ");
-
-    display.println(" ");
+    display.setCursor(20,8);
+    display.print("Orientation ");
 
     display.setCursor(0,20);
     display.print(" x : ");
-    display.print(orientationData.orientation.x);
+    display.print(IMU_data.orientation.x);
     display.println();
 
     display.setCursor(0,30);
     display.print(" y : ");
-    display.print(orientationData.orientation.y);
+    display.print(IMU_data.orientation.y);
     display.println();
 
     display.setCursor(0,40);
     display.print(" z : ");
-    display.print(orientationData.orientation.z);
+    display.print(IMU_data.orientation.z);
     display.println();
 
     display.drawLine(0, 50, 128, 50, WHITE);
     display.setCursor(0,55); 
 
-  if (carteSdIn){
+  if (imuDetected&&carteSdIn){
     display.print(" +1   ---o--   IMULog");
   }
   else{
@@ -90,33 +143,30 @@ void ScreenOrientData(){
 
 void ScreenLinearAccelData(){
   
-    bno.getEvent(&linearAccelData, Adafruit_BNO055::VECTOR_LINEARACCEL);    
-
     display.setTextSize(1);
     display.setTextColor(WHITE);
     display.println("       - IMU -  ");
-    display.println("   Accelero Linear ");
-
-    display.println(" ");
+    display.setCursor(20,8);
+    display.println("Accelero Linear ");
 
     display.setCursor(0,20);
     display.print(" x : ");
-    display.print(linearAccelData.acceleration.x);
+    display.print(IMU_data.linearAcceleration.x);
 
     display.setCursor(0,30);
     display.print(" y : ");
-    display.print(linearAccelData.acceleration.y);
+    display.print(IMU_data.linearAcceleration.y);
 
     display.setCursor(0,40);
     display.print(" z : ");
-    display.print(linearAccelData.acceleration.z);
+    display.print(IMU_data.linearAcceleration.z);
 
     display.println(" ");
 
     display.drawLine(0, 50, 128, 50, WHITE);
     display.setCursor(0,55); 
 
-  if (carteSdIn){
+  if (imuDetected&&carteSdIn){
     display.print(" +1   ---o--   IMULog");
   }
   else{
@@ -130,29 +180,26 @@ void ScreenLinearAccelData(){
 }
 
 void ScreenAngleVelocityData(){
-  
-    bno.getEvent(&angVelocityData, Adafruit_BNO055::VECTOR_GYROSCOPE);
- 
+   
     display.setTextSize(1);
     display.setTextColor(WHITE);
     display.println("       - IMU -  ");
-    display.println("        Gyroscope ");
-
-    display.println(" ");
+    display.setCursor(20,8);
+    display.println("Gyroscope ");
 
     display.setCursor(0,20);
     display.print(" x : ");
-    display.print(angVelocityData.gyro.x);
+    display.print(IMU_data.gyro.x);
     display.println();
 
     display.setCursor(0,30);
     display.print(" y : ");
-    display.print(angVelocityData.gyro.y);
+    display.print(IMU_data.gyro.y);
     display.println();
 
     display.setCursor(0,40);
     display.print(" z : ");
-    display.print(angVelocityData.gyro.z);
+    display.print(IMU_data.gyro.z);
     display.println();
 
     display.println(" ");
@@ -160,7 +207,7 @@ void ScreenAngleVelocityData(){
     display.drawLine(0, 50, 128, 50, WHITE);
     display.setCursor(0,55); 
 
-  if (carteSdIn){
+  if (imuDetected&&carteSdIn){
     display.print(" +1   ---o--   IMULog");
   }
   else{
@@ -175,29 +222,26 @@ void ScreenAngleVelocityData(){
 }
 
 void ScreenAccelerationData(){
-  
-    bno.getEvent(&accelerationData, Adafruit_BNO055::VECTOR_ACCELEROMETER);
- 
+   
     display.setTextSize(1);
     display.setTextColor(WHITE);
     display.println("       - IMU -  ");
-    display.println("     Accelerometer ");
-
-    display.println(" ");
+    display.setCursor(20,8);
+    display.println("Accelerometer ");
 
     display.setCursor(0,20);
     display.print(" x : ");
-    display.print(accelerationData.acceleration.x);
+    display.print(IMU_data.acceleration.x);
     display.println();
 
     display.setCursor(0,30);
     display.print(" y : ");
-    display.print(accelerationData.acceleration.y);
+    display.print(IMU_data.acceleration.y);
     display.println();
 
     display.setCursor(0,40);
     display.print(" z : ");
-    display.print(accelerationData.acceleration.z);
+    display.print(IMU_data.acceleration.z);
     display.println();
 
     display.println(" ");
@@ -205,7 +249,7 @@ void ScreenAccelerationData(){
     display.drawLine(0, 50, 128, 50, WHITE);
     display.setCursor(0,55); 
 
-  if (carteSdIn){
+  if (imuDetected&&carteSdIn){
     display.print(" +1   ---o--   IMULog");
   }
   else{
@@ -221,29 +265,26 @@ void ScreenAccelerationData(){
 
 
 void ScreenGravityData(){
-  
-    bno.getEvent(&gravityData, Adafruit_BNO055::VECTOR_GRAVITY); 
-    
+      
     display.setTextSize(1);
     display.setTextColor(WHITE);
     display.println("       - IMU -  ");
-    display.println("   Gravitometer ");
-
-    display.println(" ");
+    display.setCursor(20,8);
+    display.println("Gravitometer ");
 
     display.setCursor(0,20);
     display.print(" x : ");
-    display.print(gravityData.acceleration.x);
+    display.print(IMU_data.gravity.x);
     display.println();
 
     display.setCursor(0,30);
     display.print(" y : ");
-    display.print(gravityData.acceleration.y);
+    display.print(IMU_data.gravity.y);
     display.println();
 
     display.setCursor(0,40);
     display.print(" z : ");
-    display.print(gravityData.acceleration.z);
+    display.print(IMU_data.gravity.z);
     display.println();
 
     display.println(" ");
@@ -251,7 +292,7 @@ void ScreenGravityData(){
     display.drawLine(0, 50, 128, 50, WHITE);
     display.setCursor(0,55); 
 
-  if (carteSdIn){
+  if (imuDetected&&carteSdIn){
     display.print(" +1   ---o--   IMULog");
   }
   else{
@@ -266,29 +307,26 @@ void ScreenGravityData(){
 }
 
 void ScreenMagnetoData(){
-  
-    bno.getEvent(&magnetoData, Adafruit_BNO055::VECTOR_MAGNETOMETER);
-    
+      
     display.setTextSize(1);
     display.setTextColor(WHITE);
     display.println("       - IMU -  ");
-    display.println("   Magnetometer ");
-
-    display.println(" ");
-
+    display.setCursor(20,8);
+    display.println("Magnetometer ");
+    
     display.setCursor(0,20);
     display.print(" x : ");
-    display.print(magnetoData.magnetic.x);
+    display.print(IMU_data.magnetic.x);
     display.println();
 
     display.setCursor(0,30);
     display.print(" y : ");
-    display.print(magnetoData.magnetic.y);
+    display.print(IMU_data.magnetic.y);
     display.println();
 
     display.setCursor(0,40);
     display.print(" z : ");
-    display.print(magnetoData.magnetic.z);
+    display.print(IMU_data.magnetic.z);
     display.println();
 
     display.println(" ");
@@ -296,7 +334,7 @@ void ScreenMagnetoData(){
     display.drawLine(0, 50, 128, 50, WHITE);
     display.setCursor(0,55); 
 
-  if (carteSdIn){
+  if (imuDetected&&carteSdIn){
     display.print(" +1   ---o--   IMULog");
   }
   else{
@@ -311,31 +349,33 @@ void ScreenMagnetoData(){
 }
 
 void ScreenTemperature(){
-  
-    int8_t boardTemp = bno.getTemp();
-    
+      
     display.setTextSize(1);
     display.setTextColor(WHITE);
     display.println("       - IMU -  ");
-    display.println("   Temperature ");
-    display.println(" ");
+    display.setCursor(20,8);
+    display.println("External");
 
-    display.setCursor(20,20);
-    display.setTextSize(3);
-    display.print(boardTemp);
+    display.setCursor(0,20);
+    display.print("Temperature ");
+    display.print(IMU_data.temperature); 
+    display.print(" C");
 
-    display.setCursor(65,20);
-    display.setTextSize(1);
-    display.print("o");
-    display.setCursor(70,20);
-    display.setTextSize(2);
-    display.print(" C ");
+    display.setCursor(0,30);
+    display.print("Pressure ");
+    display.print(IMU_data.pressure);
+    display.print(" hPa");
+
+    display.setCursor(0,40);
+    display.print("Altitude ");
+    display.print(IMU_data.altitude);
+    display.print(" m");
 
     display.setTextSize(1);
     display.drawLine(0, 50, 128, 50, WHITE);
     display.setCursor(0,55); 
 
-  if (carteSdIn){
+  if (imuDetected&&carteSdIn){
     display.print(" +1   ---o--   IMULog");
   }
   else{
@@ -347,81 +387,6 @@ void ScreenTemperature(){
     
     display.clearDisplay();
     
-}
- 
-//------------------------------------------
-
-void ScreenIMUEvent(sensors_event_t* event) {
-  display.setTextSize(1);
-  display.setTextColor(WHITE);
-  
-  double x = -1000000, y = -1000000 , z = -1000000; //dumb values, easy to spot problem
-  
-  if (event->type == SENSOR_TYPE_ACCELEROMETER) {
-    x = event->acceleration.x;
-    y = event->acceleration.y;
-    z = event->acceleration.z;
-    display.println(" ACCELEROMETER m/s^2");
-  }
-
-  else if (event->type == SENSOR_TYPE_LINEAR_ACCELERATION) {
-    x = event->acceleration.x;
-    y = event->acceleration.y;
-    z = event->acceleration.z;
-    display.println(" LINEAR_ACCEL m/s^2");
-
-  }
-
-   else if (event->type == SENSOR_TYPE_GRAVITY ) {
-    x = event->acceleration.x;
-    y = event->acceleration.y;
-    z = event->acceleration.z;
-    display.println("  GRAVITY m/s^2");
-  }
-  
-  else if (event->type == SENSOR_TYPE_ORIENTATION) {
-    x = event->orientation.x;
-    y = event->orientation.y;
-    z = event->orientation.z;
-    display.println("  ORIENTATION deg");
-  }
-  else if (event->type == SENSOR_TYPE_MAGNETIC_FIELD) {
-    x = event->magnetic.x;
-    y = event->magnetic.y;
-    z = event->magnetic.z;
-    display.println("MAGNETIC_FIELD uT");
-  }
-  else if ((event->type == SENSOR_TYPE_GYROSCOPE) || (event->type == SENSOR_TYPE_ROTATION_VECTOR)) {
-    x = event->gyro.x;
-    y = event->gyro.y;
-    z = event->gyro.z;
-    display.println("  GYROSCOPE rad/s");
-  }
-  
-   display.println("");
-
-  display.print("  x = ");
-  display.println(x);
-  display.print("  y = ");
-  display.println(y);
-  display.print("  z = ");
-  display.println(z);
-
-  display.print("  Abs = ");
-  display.println(sqrt((x*x)+(y*y)+(z*z)));
-
-  display.println("");
-
-  display.drawLine(0, 53, 128, 53, WHITE);
-    
-  display.setTextSize(1);
-    
-  display.print(" Home    ///     Log ");
-    
-  display.setCursor(0,0);
-  display.display();
-  display.clearDisplay();
-
 }
 
 //------------------------------------------
@@ -458,5 +423,3 @@ int appendValueReturnMinMax(int newValue, int arrayOfValues[], int sizeOfArray){
     return (minValue,maxValue);
   
 }
-
-
