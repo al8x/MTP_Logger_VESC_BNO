@@ -4,6 +4,8 @@
 #ifndef Global_Variable_List_h
 #define Global_Variable_List_h
 
+#define VERSION_SOFT    1.1
+
 //-----------------------------------------------
 //-------------------------- INTERFACE Definition 
 //-----------------------------------------------
@@ -103,16 +105,13 @@ long int currentMagnetTime;
 long int previousMagnetTime; //Save the time of the previous magnet in order to save and show the speed
 float currentSpeed = 0; // the speed is refreshed each time the sensor see the magnet
 
-#define NbDeDiametre 16 //CE nombre doit matcher la taille du tableau ci dessoius
-int ListeDeDiametrePossible[NbDeDiametre] ={54,58,66,70,76,80,110,120,150,175,180,200,203,208,216,250};
-
-int RangDiametre = 9 ; //Set the the diameter o 80 mm. The RangDiametre value can be changed in the setting to adapt the value according to the product we are testing
+int wheel_diameter; // used in the wheel efficiency programm
 
 int nbAimentSurRoue= 1; // We assume that magnet on the wheel are equally spaced
 
 int indX; //indX ecriture dans stockage
-//int Stockage[NbrePtsMesure+1]; //= Nombre de points de mesure+1
-int Stockage[1000]; //= Nombre de points de mesure+1
+#define MAX_MEASURE_POINT 1000
+int Stockage[MAX_MEASURE_POINT]; //= Nombre de points de mesure+1
 
 bool wheelEffMesure;
 bool Fini;
@@ -128,7 +127,7 @@ int DataAlreadySaved = false;
 int DistanceDeMesure = 45; // en mètre
 int NumeroDeSAmple =1; // permet d'identifier chaque échantillions dans le programme wheel efficiency
 const int nbPassageAimentParAquisition= 1; // Un nombre supérieur à 1 permet d'augmnenter la distance en diminuant le nombre de points
-int NbrePtsMesure = (DistanceDeMesure*nbAimentSurRoue)/(nbPassageAimentParAquisition*(ListeDeDiametrePossible[RangDiametre]/(float)1000)*3.14159); 
+int NbrePtsMesure = (DistanceDeMesure*nbAimentSurRoue)/(nbPassageAimentParAquisition*(wheel_diameter/(float)1000)*3.14159); 
 //Nombre de points de mesure sur la courbe, doit être au minimum de 2. Au dela de 20 points, des problème de mémoire peut apparaitre avec un arduino Uno
 
 //---------------------------------------

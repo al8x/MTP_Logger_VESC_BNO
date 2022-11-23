@@ -145,7 +145,7 @@ void SaveData()
     file.print(String(day(),DEC));file.write("/");file.print(String(month(),DEC));file.write("/");file.print(String(year(),DEC));
     file.println();
      
-    file.write("WheelDiameter : ");file.print(ListeDeDiametrePossible[RangDiametre]); file.write("mm ; Nb passage aimants par aquisition : ");file.println(nbPassageAimentParAquisition);
+    file.write("WheelDiameter : ");file.print(wheel_diameter); file.write("mm ; Nb passage aimants par aquisition : ");file.println(nbPassageAimentParAquisition);
     file.write(" ; Numero d'échantillion : ");file.print(NumeroDeSAmple);file.write(" ; Nombre d'aimants sur la roue ");file.print(nbAimentSurRoue);
     file.println();
   
@@ -229,8 +229,9 @@ void SaveData()
 void SettingsWheelEfficiency(){
   //display the settings screen and allowed the user to change
   // on 0 : the diameter of the wheel
-  // on 1 The number of points to aquire
-  // on 2 the number of wheel roatation per aquistion
+  // on 1 The Distance to aquire point on
+  // on 2 the sample Number to save the settings
+  // on 3 : the magnet number on the wheel
   
   int numberOfchoicesAvailable = 3;
   int highlightedChoice = 0;
@@ -252,7 +253,8 @@ void SettingsWheelEfficiency(){
       }
         break;
         case 2:{
-          SetSampleNumber();
+          setNbMagnetOnWheel();
+          //SetSampleNumber();
       }
          break;
       }
@@ -271,13 +273,17 @@ void SettingsWheelEfficiency(){
 
 void SetDistanceDeMesure(){
 
+  rightButtonIsHold= false; // reset long press state
+  leftButtonIsHold = false; // reset long press state
+
   while (!middleButtonPressed){
-    delay(10);
     ScreenChooseDistanceDeMesure(); //Interface on the screen
+
+    longPress_detect(); // function that modify the state of right and left buttonPressed in accordance to the button read
+    NbrePtsMesure = (DistanceDeMesure*nbAimentSurRoue)/(nbPassageAimentParAquisition*(wheel_diameter/(float)1000)*3.14159);  // We update the value of the number of points to make sure we don`t overflow
     
     if (leftButtonPressed){
       leftButtonPressed=false; // Button reinitilastion
-      
       //We set the minimum 
       if (DistanceDeMesure>2){ // If the minimum is not reached
         DistanceDeMesure=DistanceDeMesure-1;
@@ -286,23 +292,26 @@ void SetDistanceDeMesure(){
     
     else if (rightButtonPressed){
       rightButtonPressed=false; // Button reinitilastion
-      if (DistanceDeMesure<999){ // If the minimum is not reached
+      int theoritical_NbreMeasure = ((DistanceDeMesure+1)*nbAimentSurRoue)/(nbPassageAimentParAquisition*(wheel_diameter/(float)1000)*3.14159);
+      if (theoritical_NbreMeasure<MAX_MEASURE_POINT){ // If the minimum is not reached
         DistanceDeMesure=DistanceDeMesure+1;
       }
     }
   }
   // at the end, we can leave with the modified rank
   middleButtonPressed=false;
-  NbrePtsMesure = (DistanceDeMesure*nbAimentSurRoue)/(nbPassageAimentParAquisition*(ListeDeDiametrePossible[RangDiametre]/(float)1000)*3.14159); 
-  // We update the value of the number of points
 }
 
 
 void SetSampleNumber(){
 
+  rightButtonIsHold= false; // reset long press state
+  leftButtonIsHold = false; // reset long press state
+
   while (!middleButtonPressed){
-    delay(10);
     ScreenChooseSampleNumber(); //Interface on the screen
+
+    longPress_detect(); // function that modify the state of right and left buttonPressed in accordance to the button read
     
     if (leftButtonPressed){
       leftButtonPressed=false; // Button reinitilastion
@@ -385,7 +394,7 @@ float pente(float SommeProduitXiYi,float MoyenneXi,float MoyenneYi,float SommeCa
 
 float Vitesse(int TmillisMoinsUn,int Tmillis){
   // Prend 2 vitesse en argument (en millis sec) et retourne une vitesse en km/h
-  return ((ListeDeDiametrePossible[RangDiametre])*3.14159*3.6)/((float)(Tmillis-TmillisMoinsUn)*nbAimentSurRoue); //Convertion en Km/h
+  return ((wheel_diameter)*3.14159*3.6)/((float)(Tmillis-TmillisMoinsUn)*nbAimentSurRoue); //Convertion en Km/h
 }
 
 float TempsAPartirStockage(int Tab[],float AxeX[]){
@@ -470,7 +479,7 @@ void screenGeneralSettingWheelEfficiency(int choice){
     }
     
     display.print(" Wheel diameter ");
-    display.print(ListeDeDiametrePossible[RangDiametre]);
+    display.print(wheel_diameter);
     display.println("mm");
     display.println("");
     display.setTextColor(WHITE);
@@ -493,8 +502,10 @@ void screenGeneralSettingWheelEfficiency(int choice){
       display.fillRect(0, 36, 128, 16, WHITE);
     }
 
-    display.print(" Sample Number - ");
-    display.print(NumeroDeSAmple);
+    //display.print(" Sample Number - ");
+    //display.print(NumeroDeSAmple);
+    display.print(" Number of magnet ");
+    display.print(nbAimentSurRoue);
     display.println("");
     display.println("");
     display.setTextColor(WHITE);
@@ -540,19 +551,22 @@ void ScreenChooseDistanceDeMesure(){
   // Ecran ou on le nombre de tours par aquisition
     display.setTextSize(1);
     display.setTextColor(WHITE);
-    display.println("   Distance ");
+    display.println("     Distance ");
     display.setTextSize(2);
-    display.println("");
-    display.print("  ");
+    display.setCursor(25,20);
     display.print(DistanceDeMesure);
     display.println(" m");
 
     display.drawLine(0, 50, 120, 50, WHITE);
     
     display.setTextSize(1);
-    display.println("");
-    display.println("");
+    display.setCursor(90,30);
+    display.print("Data");
+    display.setCursor(90,40);
+    display.print(int((NbrePtsMesure/float(MAX_MEASURE_POINT))*100)); // We show a percentage of the memory used for the measure
+    display.print("%");
     
+    display.setCursor(0,55);
     display.print("Less     OK     More");
     
     display.setCursor(0,0);

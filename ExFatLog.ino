@@ -27,7 +27,7 @@ void logRecord(data_t* data, uint16_t overrun) {
 
       // Fisrt we save the time for every cases, and uses MicroSecs if frequency above 1000 Hz
       
-      if (LOG_INTERVAL_USEC_TABLE[LOG_INTERVAL_VAL]<1000){
+      if (LOG_INTERVAL_USEC_TABLE[log_interval_selector]<1000){
         data->time_s = float((float(micros())-float(microS_logStart))/1000000);
       }
       else{
@@ -77,7 +77,7 @@ void printRecord(Print* pr, data_t* data) {
         case EXTERNAL_MCP_SPEED:
           pr->print(F("File created on : "));
           pr->println(String(hour(),DEC)+ "h"+String(minute(),DEC)+ " - "+String(day(),DEC) + "/"+String(month(),DEC) + "/"+String(year(),DEC));
-          pr->println("Wheel Diameter : "+ String(ListeDeDiametrePossible[RangDiametre]) + "mm ; Number of magnet : "+ String(nbAimentSurRoue)+ " ; Frequency : "+String(1000000/LOG_INTERVAL_USEC)+ " Hz");
+          pr->println("Wheel Diameter : "+ String(wheel_diameter) + "mm ; Number of magnet : "+ String(nbAimentSurRoue)+ " ; Frequency : "+String(1000000/LOG_INTERVAL_USEC_TABLE[log_interval_selector])+ " Hz");
           pr->print(F("time(Sec);Input 1;Input 2;Voltage bat;Speed(km/h);Digital 1;Digital 2"));
           pr->println();    
           break;
@@ -85,7 +85,7 @@ void printRecord(Print* pr, data_t* data) {
         case ANALOG_ACCELERO:
           pr->print(F("File created on : "));
           pr->println(String(hour(),DEC)+ "h"+String(minute(),DEC)+ " - "+String(day(),DEC) + "/"+String(month(),DEC) + "/"+String(year(),DEC));
-          pr->println("Wheel Diameter : "+ String(ListeDeDiametrePossible[RangDiametre]) + "mm ; Number of magnet : "+ String(nbAimentSurRoue)+ " ; Frequency : "+String(1000000/LOG_INTERVAL_USEC)+ " Hz");
+          pr->println("Wheel Diameter : "+ String(wheel_diameter) + "mm ; Number of magnet : "+ String(nbAimentSurRoue)+ " ; Frequency : "+String(1000000/LOG_INTERVAL_USEC_TABLE[log_interval_selector])+ " Hz");
           pr->print(F("time(Sec);X;Y;Z;Speed(km/h);Digital 1;Digital 2"));
           pr->println();    
           break;
@@ -93,7 +93,7 @@ void printRecord(Print* pr, data_t* data) {
         case THERMOCOUPLE:
           pr->print(F("File created on : "));
           pr->println(String(hour(),DEC)+ "h"+String(minute(),DEC)+ " - "+String(day(),DEC) + "/"+String(month(),DEC) + "/"+String(year(),DEC));
-          pr->println("Wheel Diameter : "+ String(ListeDeDiametrePossible[RangDiametre]) + "mm ; Number of magnet : "+ String(nbAimentSurRoue)+ " ; Frequency : "+String(1000000/LOG_INTERVAL_USEC)+ " Hz");
+          pr->println("Wheel Diameter : "+ String(wheel_diameter) + "mm ; Number of magnet : "+ String(nbAimentSurRoue)+ " ; Frequency : "+String(1000000/LOG_INTERVAL_USEC_TABLE[log_interval_selector])+ " Hz");
           pr->print(F("time(Sec);Temperature;Speed(km/h);Digital 1;Digital 2"));
           pr->println();    
           break;
@@ -325,7 +325,7 @@ void fastLogData() {
   microS_logStart=logTime;
   while (true) {
     // Time for next data record.
-    logTime += LOG_INTERVAL_USEC;
+    logTime += LOG_INTERVAL_USEC_TABLE[log_interval_selector];
 
     // Wait until time to log data.
     delta = micros() - logTime;
@@ -413,7 +413,7 @@ void fastLogData() {
   Serial.print(F("maxWriteMicros: "));
   Serial.println(maxWriteMicros);
   Serial.print(F("Log interval: "));
-  Serial.print(LOG_INTERVAL_USEC);
+  Serial.print(LOG_INTERVAL_USEC_TABLE[log_interval_selector]);
   Serial.print(F(" micros\nmaxDelta: "));
   Serial.print(maxDelta);
   Serial.println(F(" micros"));

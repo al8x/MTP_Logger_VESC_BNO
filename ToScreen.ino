@@ -433,6 +433,13 @@ const unsigned char epd_bitmap_FileConversion [] PROGMEM = {
 
 void ScreenLogo(int duration){
   display.drawBitmap(0,0,FieldLogger, 128, 64, WHITE); //display.drawBitmap(topLeftX, topLeftY, imageData, width, height, color)
+  
+  display.setCursor(50,55);
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.print("V");
+  display.print(VERSION_SOFT);
+  
   display.setCursor(0,0);
   display.display();
   delay(duration);
@@ -757,7 +764,7 @@ void screenGeneralSetting(int choice){
       display.fillRect(0, 4, 128, 16, WHITE);
     }
     display.print(" Frequency - ");
-    display.print(1000000/LOG_INTERVAL_USEC);
+    display.print(1000000/LOG_INTERVAL_USEC_TABLE[log_interval_selector]);
     display.println(" Hz");
     display.println("");
     display.setTextColor(WHITE);
@@ -768,7 +775,7 @@ void screenGeneralSetting(int choice){
     }
  
     display.print(" Wheel diameter ");
-    display.print(ListeDeDiametrePossible[RangDiametre]);
+    display.print(wheel_diameter);
     display.println("mm");
     display.println("");
     display.setTextColor(WHITE);
@@ -825,7 +832,7 @@ void ScreenChooseDiameter (){
     display.setTextSize(2);
     display.println("");
     display.print("  ");
-    display.print(ListeDeDiametrePossible[RangDiametre]);
+    display.print(wheel_diameter);
     display.print(" mm");
     display.println("");
 
@@ -851,7 +858,7 @@ void ScreenChooseFrequency(){
     display.setTextSize(2);
     display.println("");
     display.print("  ");
-    display.print(1000000/LOG_INTERVAL_USEC);
+    display.print(1000000/LOG_INTERVAL_USEC_TABLE[log_interval_selector]);
     display.print(" Hz");
     display.println("");
 
@@ -1327,7 +1334,7 @@ void ShowSavingStats(char binName[],int t1, int t0,int overrunTotal){
   display.print(F("Record time:"));
   display.println(0.001*(t1 - t0), 1);
   display.print(F("Samples/sec: "));
-  display.println(1000000/LOG_INTERVAL_USEC);
+  display.println(1000000/LOG_INTERVAL_USEC_TABLE[log_interval_selector]);
   display.print(F("Overruns: "));
   display.println(overrunTotal);
 

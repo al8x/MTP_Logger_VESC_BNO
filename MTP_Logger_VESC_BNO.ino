@@ -28,6 +28,7 @@
 #include <datatypes.h>   // -------- VESC Communication 
 
 #define SCB_AIRCR (*(volatile uint32_t *)0xE000ED0C) // Application Interrupt and Reset Control location
+#include <EEPROM.h>
 
 //------------------------------------------------
 // HARDWARE DEFINITION
@@ -67,7 +68,6 @@
 //------------------------------------------------
 
 #define RESOLUTION_ADC      10      // --------------Teensy Analog input
-#define DEBOUNCE_DURATION   100     // Debounce en ms
 
 // THERMOCOUPLE
 MAX31855 thermocouple;
@@ -85,7 +85,6 @@ MPU9250 mpu = MPU9250();
 #define LOG_INTERVAL_VAL    13 //Value between whicj we can select the speed of record
 uint32_t LOG_INTERVAL_USEC_TABLE[LOG_INTERVAL_VAL]={500,666,1000,2000,4000,8000,10000,20000,50000,100000,200000,500000,1000000};
 int log_interval_selector = 4;      
-uint32_t LOG_INTERVAL_USEC = LOG_INTERVAL_USEC_TABLE[log_interval_selector];
 
 
 // FIFO SIZE - Value; can be 1 4 16
@@ -134,21 +133,39 @@ float freeSpace ;
 float cardSize ;
 
 //------------------------------------------------
+// ADRESS Definition for no power SETTINGS SAVINGS
+//------------------------------------------------
+// This table will give the definition of where and what is stored in the EEPROM of the teensy
+
+#define ADRESS_FREQUENCY  0
+#define ADRESS_WHEEL_DIAM  1
+#define ADRESS_MAGNET_NB  2
+
+//------------------------------------------------
 // OPERATIONAL VARIABLES DEFINITION
 //------------------------------------------------
 
 // ------------- Digital inputs
 //Button and Hall effect Sensors
 
+#define DEBOUNCE_DURATION   100     // Debounce en ms for buttons
+#define DEBOUNCE_LONG_PRESS  500    // ms - Time before we count the press as a long press
+
 unsigned long lastButtonAction = millis();
 unsigned long lastLeftButtonAction = millis();
 unsigned long lastMiddleButtonAction = millis();
 unsigned long lastRightButtonAction = millis();
 
+unsigned long int falling_edge_right= millis(); // Long press debounce
+unsigned long int falling_edge_left= millis();
+
 // Buttons actions
 int rightButtonPressed = false;     //boolean for the button 
 int middleButtonPressed = false;    //boolean for the button 
 int leftButtonPressed = false;      //boolean for the button 
+
+int rightButtonIsHold = false;      // Boolean for long press detection
+int leftButtonIsHold = false;       // Boolean for long press detection
 
 // ------------SD card
 bool mtpActivated = false;
@@ -207,6 +224,16 @@ void setup()
   DEBUGSERIAL.begin(115200); // Serial for Debug
   SetDebugSerialPort(&DEBUGSERIAL);
 
+  //--- EEPROM - Memory variables initialisation 
+
+    log_interval_selector = EEPROM.read(ADRESS_FREQUENCY);
+    log_interval_selector = constrain(log_interval_selector,0,LOG_INTERVAL_VAL-1);
+    
+    wheel_diameter = EEPROM.read(ADRESS_WHEEL_DIAM);
+    wheel_diameter = constrain(wheel_diameter,1,1000); // a thousand because a bike wheel can go to 750 mm
+    
+    nbAimentSurRoue = EEPROM.read(ADRESS_MAGNET_NB);
+    nbAimentSurRoue = constrain(nbAimentSurRoue,1,100);
 
 //-------------------------------------- Pin declaration
 
@@ -361,9 +388,7 @@ void setup()
   while(!rightButtonPressed){
     delay(10);
   }
-     
-  ResetButton();
-  
+  ResetButton();  
 }
 
 
@@ -559,7 +584,7 @@ void USB_Communication(){
 void OneWheelRotation(){
  // set the current speed in km/h
  currentMagnetTime = micros();
- currentSpeed = (1000*3.14159*3.6*ListeDeDiametrePossible[RangDiametre])/((float)(currentMagnetTime-previousMagnetTime)*nbAimentSurRoue);  //On se met en km/h avec passage des micros sce en sec et mm en m
+ currentSpeed = (1000*3.14159*3.6*wheel_diameter)/((float)(currentMagnetTime-previousMagnetTime)*nbAimentSurRoue);  //On se met en km/h avec passage des micros sce en sec et mm en m
  previousMagnetTime=currentMagnetTime;
 
  WheelEfficiencyMagnet();

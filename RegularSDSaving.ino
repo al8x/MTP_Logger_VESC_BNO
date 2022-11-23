@@ -78,7 +78,7 @@ void slowWriteData() {
 void slowWriteHeader() {
   file.print(F("File created on : "));
   file.println(String(hour(),DEC)+ "h"+String(minute(),DEC)+ " - "+String(day(),DEC) + "/"+String(month(),DEC) + "/"+String(year(),DEC));
-  file.println("WheelDiameter : "+ String(ListeDeDiametrePossible[RangDiametre]) + "mm ; Number of magnet : "+ String(nbAimentSurRoue)+ " ; Frequency : "+String(1000000/LOG_INTERVAL_USEC)+ " Hz");
+  file.println("WheelDiameter : "+ String(wheel_diameter) + "mm ; Number of magnet : "+ String(nbAimentSurRoue)+ " ; Frequency : "+String(1000000/LOG_INTERVAL_USEC_TABLE[log_interval_selector])+ " Hz");
   file.print(F("time"));
   
   
