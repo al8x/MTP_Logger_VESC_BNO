@@ -4,7 +4,7 @@
  Download the arduino version 1.8.19 [HERE](https://drive.google.com/file/d/1MVcYucFAieLHTNYb9F2uXIgd6ZfItMbf/view?usp=share_link)
  or directly on Arduino [Website](https://www.arduino.cc/en/software)
  
- Download the Teensyduino 1.57 [HERE](https://drive.google.com/file/d/1MYV_6k8_FOjVSu_0nEv0t5DYQVfheGJX/view?usp=share_link)
+ Download the Teensyduino 1.57 [HERE](https://drive.google.com/file/d/1MYV_6k8_FOjVSu_0nEv0t5DYQVfheGJX/view?usp=share_link) or directly on Teensy [Website](https://www.pjrc.com/teensy/td_download.html)
  
  Download the librairies [HERE](https://drive.google.com/file/d/1uD_BRNu2cje4Sr70Sb3zQySTAuelpn7L/view?usp=share_link)
  
