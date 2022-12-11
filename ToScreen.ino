@@ -793,7 +793,7 @@ void screenGeneralSetting(int choice){
     
     display.setTextSize(1);
     display.setCursor(0,55);
-    display.print(" ////    Set     Next");
+    display.print(" ///     Set     Next");
     
     display.setCursor(0,0);
     display.display();
@@ -987,15 +987,12 @@ void Sensors_RedirectingScreen(){
       SensorsScreen();
       break;
     case 1:
-      SensorsAmplif_1_Screen();
-      break;
-    case 2:
-      SensorsAmplif_2_Screen();
+      Sensors_MultiGraph_Screen();
       break;
 //    case 3:
 //      SensorsAnalog_Screen();
 //      break;
-    case 3:
+    case 2:
       generalSettings();   // Can change some setting linked to that mode like frequency and and wheel size
       SensorsMode+= 1;
       SensorsMode= (SensorsMode%nbSensorsMode); // We must add this reset mode since generalSetting function lock you inside
@@ -1003,45 +1000,55 @@ void Sensors_RedirectingScreen(){
   }
 }
 
-void SensorsAmplif_1_Screen(){
+void Sensors_MultiGraph_Screen(){
 
-  WideGraph(readADC(0),10,0,0,48);
+  int variable_to_graph;
+  
+  switch (Sensors_graphSelector) {
+    case 0:
+      variable_to_graph = readADC(0);
+      break;
+    case 1:
+      variable_to_graph = readADC(1);
+      break;
+    case 2:
+      variable_to_graph = (digitalRead(HALL_SENSOR_ONE_PIN)) ; // digital
+      break;
+    case 3:
+      variable_to_graph = (digitalRead(HALL_SENSOR_TWO_PIN)) ; // digital
+      break;
+    case 4:
+      variable_to_graph = (digitalRead(HALL_SENSOR_SPEED_PIN)) ; // digital
+      break;
+    case 5:
+      variable_to_graph = currentSpeed ; // Speed
+      break;
+    case 6:
+      variable_to_graph = analogRead(ANALOG_TWO_PIN); // Analog 1
+      break;
+    case 7:
+      variable_to_graph = analogRead(ANALOG_ONE_PIN); //  Analog 2
+      break;
+    case 8:
+      break;
+  }
+  
+  WideGraph(variable_to_graph,10,0,0,48);
   display.setTextColor(BLACK);
-  display.fillRect(40, 0, 45, 10, WHITE);
-  display.setCursor(42,1);
-  display.print("Ampli A");
+
+  display.fillRect(100, 0, 24, 10, WHITE);
+  display.setCursor(104,1);
+  display.print(Sensors_graphSelector);
+  display.print("/");
+  display.print(SENSORS_NB_GRAPH-1);
+  
   
   display.setCursor(0,55);
   display.setTextColor(WHITE);
 
-  if (carteSdIn){
-    display.print(" //   -o----  FastLog");
-  }
-  else{
-    display.print(" //   -o----      *  ");
-  }
- 
-  display.drawLine(0, 50, 128, 50, WHITE);
-  display.display();
-  display.clearDisplay();
-}
-
-void SensorsAmplif_2_Screen(){
-
-  WideGraph(readADC(1),10,0,0,48);
-  display.setTextColor(BLACK);
-  display.fillRect(40, 0, 45, 10, WHITE);
-  display.setCursor(42,1);
-  display.print("Ampli B");
-  display.setTextColor(WHITE);
-  display.setCursor(0,55);
-
-  if (carteSdIn){
-    display.print(" ///  -o----  FastLog");
-  }
-  else{
-    display.print(" ///  -o----      *  ");
-  }
+  display.print(" //   -o---- ");
+  display.print(list_nameGraph[Sensors_graphSelector]);
+  
  
   display.drawLine(0, 50, 128, 50, WHITE);
   display.display();

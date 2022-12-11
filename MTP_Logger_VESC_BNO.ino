@@ -408,7 +408,7 @@ void loop(void) {
       OnEstPret();   //Landing screen, No action performing in the function
       break;
     case 1:
-      Sensors_RedirectingScreen();   //Landing screen, No action performing in the function
+      Sensors_RedirectingScreen();   //Landing  screen, No action performing in the function
       Sensors_BluetoothSend();
       break;
     case 2:
@@ -485,9 +485,13 @@ void loop(void) {
           }   
           break;        
         case 1:
-        if (carteSdIn){
+        if (carteSdIn&&(SensorsMode==0)){
            logging_application = EXTERNAL_MCP_SPEED;
            fastLog_programme();
+        }
+        else if (SensorsMode==1){
+          Sensors_graphSelector+=1;
+          Sensors_graphSelector=(Sensors_graphSelector%SENSORS_NB_GRAPH);
         }
           break;
         case 2:

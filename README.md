@@ -1,5 +1,13 @@
 # MTP_Logger_VESC_BNO
  This code powers the pocket logger device that allows you to log data on a teensy platform at a speed up to 1500 Hz. The hardware features a variety of ports and instrumental sensors allowing creative applications.
+ 
+ Download the arduino version 1.8.19 [HERE](https://drive.google.com/file/d/1MVcYucFAieLHTNYb9F2uXIgd6ZfItMbf/view?usp=share_link)
+ or directly on Arduino [Website](https://www.arduino.cc/en/software)
+ 
+ Download the Teensyduino 1.57 [HERE](https://drive.google.com/file/d/1MYV_6k8_FOjVSu_0nEv0t5DYQVfheGJX/view?usp=share_link) or directly on Teensy [Website](https://www.pjrc.com/teensy/td_download.html)
+ 
+ Download the librairies [HERE](https://drive.google.com/file/d/1uD_BRNu2cje4Sr70Sb3zQySTAuelpn7L/view?usp=share_link)
+ 
 
 ### V1.1
 - Add long press features for options scroll

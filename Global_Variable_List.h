@@ -4,7 +4,7 @@
 #ifndef Global_Variable_List_h
 #define Global_Variable_List_h
 
-#define VERSION_SOFT    1.1
+#define VERSION_SOFT    1.2
 
 //-----------------------------------------------
 //-------------------------- INTERFACE Definition 
@@ -13,8 +13,12 @@
 int quelScreen = 0; // valeur quin permet de choisir quel écran est affiché
 #define nbTotalScreen   6 // Number of main interface we have
 
+
 int  SensorsMode= 0;
-#define  nbSensorsMode  4
+#define  nbSensorsMode  3
+int Sensors_graphSelector = 0;
+#define SENSORS_NB_GRAPH    8
+String list_nameGraph[SENSORS_NB_GRAPH]={"Ampli A","Ampli B","Digit 1","Digit 2","Digit 3","Speed","Analog 1","Analog 2"};
 
 int vescMode = 0;
 #define nbTotalVescMode 3
